@@ -10,6 +10,15 @@ Requires Python 3.5 or later.
 pip install -U rarbg
 ```
 
+## Docker
+
+Run it with docker like this:
+
+```
+docker build . --tag rarbg:v1
+docker run -p 4444:4444 -it rarbg:v1
+```
+
 ## Usage
 
 Run the server by typing `rarbg`. You can optionally specify host and port with `-h` (default 0.0.0.0) and `-p` options (default 4444).
