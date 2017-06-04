@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name='rarbg',
-    version='0.2-dev',
+    version='1.0.0',
     description='RSS interface to TorrentAPI',
     url='https://github.com/banteg/rarbg',
     py_modules=['rarbg'],
