@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 from email.utils import formatdate
 from urllib.parse import parse_qs
 
-from aiohttp import get, web
+from aiohttp import ClientSession, web
 from dateutil import parser
 from humanize import naturalsize
 from jinja2 import Template
@@ -51,11 +51,15 @@ def pretty(data: dict):
     return ', '.join(['='.join(pair) for pair in data.items()])
 
 
+async def fetch_json(*args, **kwds):
+    resp = await app.s.get(*args, **kwds)
+    return await resp.json()
+
+
 async def refresh_token():
     token_expired = datetime.now() > app.token_got + TOKEN_LIFESPAN
     if not app.token or token_expired:
-        resp = await get(API_ENDPOINT, params={'get_token': 'get_token'})
-        data = await resp.json()
+        data = await fetch_json(API_ENDPOINT, params={'get_token': 'get_token'})
         app.token = data['token']
         app.token_got = datetime.now()
         secho('refresh token - {}'.format(app.token), fg='yellow')
@@ -69,18 +73,18 @@ async def api(params):
 
     async with app.lock:
         await refresh_token()
-
-    async with app.lock:
         params.update(token=app.token, format='json_extended')
-        resp = await get(API_ENDPOINT, params=params)
+        data = await fetch_json(API_ENDPOINT, params=params)
         await asyncio.sleep(API_RATE_LIMIT)
 
-    data = await resp.json()
     error, results = data.get('error'), data.get('torrent_results')
 
     if error:
         secho('[{}] {}'.format(request_id, error), fg='red')
-        return web.HTTPServiceUnavailable(text=error)
+        if 'get_token' in error:
+            await refresh_token()
+        else:
+            return web.HTTPServiceUnavailable(text=error)
 
     for i in results:
         i.update(
@@ -106,20 +110,18 @@ async def rarbg_rss(request):
     return await api(params)
 
 
+async def on_shutdown(app):
+    app.s.close()
+
+
 app.router.add_route('GET', '/', rarbg_rss)
 app.router.add_route('GET', '/search/{string}', rarbg_rss)
 app.router.add_route('GET', '/imdb/{imdb}', rarbg_rss)
 app.router.add_route('GET', '/tvdb/{tvdb}', rarbg_rss)
-
-
-def main():
-    loop = asyncio.get_event_loop()
-    handler = app.make_handler()
-    f = loop.create_server(handler, '0.0.0.0', 4444)
-    srv = loop.run_until_complete(f)
-    secho('serving on {}:{}'.format(*srv.sockets[0].getsockname()), fg='yellow')
-    loop.run_forever()
+app.on_shutdown.append(on_shutdown)
 
 
 if __name__ == '__main__':
-    main()
+    loop = asyncio.get_event_loop()
+    app.s = ClientSession(loop=loop)
+    web.run_app(app, host='0.0.0.0', port=4444)
