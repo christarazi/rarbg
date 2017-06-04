@@ -11,7 +11,7 @@ from aiohttp import ClientSession, web
 from dateutil import parser
 from humanize import naturalsize
 from jinja2 import Template
-from click import secho
+import click
 
 API_ENDPOINT = 'https://torrentapi.org/pubapi_v2.php'
 API_RATE_LIMIT = 2  # seconds/request
@@ -62,14 +62,14 @@ async def refresh_token():
         data = await fetch_json(API_ENDPOINT, params={'get_token': 'get_token'})
         app.token = data['token']
         app.token_got = datetime.now()
-        secho('refresh token - {}'.format(app.token), fg='yellow')
+        click.secho('refresh token - {}'.format(app.token), fg='yellow')
 
 
 async def api(params):
     app.counter += 1
     request_id = app.counter
     query_text = pretty(params)
-    secho('[{}] {}'.format(request_id, query_text), fg='cyan')
+    click.secho('[{}] {}'.format(request_id, query_text), fg='cyan')
 
     async with app.lock:
         await refresh_token()
@@ -80,7 +80,7 @@ async def api(params):
     error, results = data.get('error'), data.get('torrent_results')
 
     if error:
-        secho('[{}] {}'.format(request_id, error), fg='red')
+        click.secho('[{}] {}'.format(request_id, error), fg='red')
         if 'get_token' in error:
             await refresh_token()
         else:
@@ -93,7 +93,7 @@ async def api(params):
             hash=parse_qs(i['download'])['magnet:?xt'][0].split(':')[-1],
         )
 
-    secho('[{}] {} results'.format(request_id, len(results)), fg='green')
+    click.secho('[{}] {} results'.format(request_id, len(results)), fg='green')
 
     result = TEMPLATE.render(title='rarbg', entries=results)
     return web.Response(text=result)
@@ -121,10 +121,13 @@ app.router.add_route('GET', '/tvdb/{tvdb}', rarbg_rss)
 app.on_shutdown.append(on_shutdown)
 
 
-def main():
+@click.command()
+@click.option('-p', '--port', default=4444, type=int)
+@click.option('-h', '--host', default='0.0.0.0')
+def main(port, host):
     loop = asyncio.get_event_loop()
     app.s = ClientSession(loop=loop)
-    web.run_app(app, host='0.0.0.0', port=4444)
+    web.run_app(app, host=host, port=port)
 
 
 if __name__ == '__main__':

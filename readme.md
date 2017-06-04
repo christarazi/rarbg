@@ -7,16 +7,16 @@ Adapter for Torrent API ([see docs](https://torrentapi.org/apidocs_v2.txt)) that
 Requires Python 3.5 or later.
 
 ```
-pip install git+https://github.com/banteg/rarbg
+pip install -U rarbg
 ```
 
 ## Usage
 
-Run the server by typing `rarbg`.
+Run the server by typing `rarbg`. You can optionally specify host and port with `-h` (default 0.0.0.0) and `-p` options (default 4444).
 
-Access it by passing parameters to `http://localhost:8080/` as you would pass them to Torrent API. 
+Access it by passing parameters to `http://localhost:444/` as you would pass them to Torrent API.
 
-Note that Torrent API has a rate limit of one request per two seconds. 
+Note that Torrent API has a rate limit of one request per two seconds.
 
 Token updates and rate limits are handled automatically.
 
@@ -44,7 +44,7 @@ All parameters can be mixed together and work with convenience methods.
 
 ### Example
 
-`http://localhost:8080/imdb/tt2802850?category=41` will get you HD releases of Fargo
+`http://localhost:4444/imdb/tt2802850?category=41` will get you HD releases of Fargo
 
 ### Categories
 
