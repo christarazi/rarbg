@@ -121,7 +121,11 @@ app.router.add_route('GET', '/tvdb/{tvdb}', rarbg_rss)
 app.on_shutdown.append(on_shutdown)
 
 
-if __name__ == '__main__':
+def main():
     loop = asyncio.get_event_loop()
     app.s = ClientSession(loop=loop)
     web.run_app(app, host='0.0.0.0', port=4444)
+
+
+if __name__ == '__main__':
+    main()
