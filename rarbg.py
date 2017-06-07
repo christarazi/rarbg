@@ -17,7 +17,7 @@ API_ENDPOINT = 'https://torrentapi.org/pubapi_v2.php'
 API_RATE_LIMIT = 2  # seconds/request
 TOKEN_LIFESPAN = timedelta(minutes=15)
 
-TEMPLATE = Template('''
+TEMPLATE = Template('''\
 <?xml version="1.0" encoding="utf-8"?>
 <rss version="2.0">
     <channel>
@@ -31,14 +31,13 @@ TEMPLATE = Template('''
             <guid>{{entry.hash}}</guid>
             <pubDate>{{entry.pubdate}}</pubDate>
             <enclosure
-                url="{{entry.download}}"
+                url="{{entry.download | e}}"
                 length="{{entry.size}}"
                 type="application/x-bittorrent" />
         </item>
         {% endfor %}
     </channel>
-</rss>
-''')
+</rss>''')
 
 app = web.Application()
 app.token = None
