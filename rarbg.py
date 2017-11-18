@@ -95,7 +95,7 @@ async def api(params):
     click.secho('[{}] {} results'.format(request_id, len(results)), fg='green')
 
     result = TEMPLATE.render(title='rarbg', entries=results)
-    return web.Response(text=result)
+    return web.Response(text=result, content_type='text/xml')
 
 
 async def rarbg_rss(request):
