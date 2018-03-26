@@ -100,7 +100,7 @@ async def api(params):
 
 
 async def rarbg_rss(request):
-    params = dict(request.GET)
+    params = dict(request.query)
     if 'string' in request.match_info:
         params.update(mode='search', search_string=request.match_info['string'])
     if 'imdb' in request.match_info:
