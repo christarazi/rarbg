@@ -16,6 +16,7 @@ import click
 API_ENDPOINT = 'https://torrentapi.org/pubapi_v2.php'
 API_RATE_LIMIT = 2  # seconds/request
 TOKEN_LIFESPAN = timedelta(minutes=15)
+APP_ID = 'github.com/banteg/rarbg'
 
 TEMPLATE = Template('''\
 <?xml version="1.0" encoding="utf-8"?>
@@ -58,7 +59,7 @@ async def fetch_json(*args, **kwds):
 async def refresh_token():
     token_expired = datetime.now() > app.token_got + TOKEN_LIFESPAN
     if not app.token or token_expired:
-        data = await fetch_json(API_ENDPOINT, params={'app_id': 'Rarbg', 'get_token': 'get_token'})
+        data = await fetch_json(API_ENDPOINT, params={'get_token': 'get_token', 'app_id': APP_ID})
         app.token = data['token']
         app.token_got = datetime.now()
         click.secho('refresh token - {}'.format(app.token), fg='yellow')
@@ -72,7 +73,7 @@ async def api(params):
 
     async with app.lock:
         await refresh_token()
-        params.update(token=app.token, format='json_extended')
+        params.update(token=app.token, format='json_extended', app_id=APP_ID)
         data = await fetch_json(API_ENDPOINT, params=params)
         await asyncio.sleep(API_RATE_LIMIT)
 
